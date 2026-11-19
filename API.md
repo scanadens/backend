@@ -268,4 +268,4 @@ Added for the Keep Up frontend. Everything above still applies.
 
 **Pinning** in the app is `PUT /events/:id/rsvp` with `"going"`. Past events: `GET /events?from=2020-01-01`.
 
-`npm run db:setup -- --reset` now also loads `db/seed_keepup.sql`: the ten Western posters with dates relative to today, 70 sample students for going counts, and sample ratings. It replaces the placeholder events from `seed.sql`.
+`npm run db:setup -- --reset` now also loads `db/seed_keepup.sql`: the ten Western posters with the dates printed on them, 70 sample students for going counts, and sample ratings. It replaces the placeholder events from `seed.sql`.
