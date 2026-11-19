@@ -248,3 +248,24 @@ All passwords are `password123`.
 | `admin@uwo.ca` | Platform admin |
 
 The seed data also includes a **draft**, a **cancelled** event and a **past** event. None of them should appear in `GET /events`.
+
+---
+
+## Keep Up additions
+
+Added for the Keep Up frontend. Everything above still applies.
+
+**New event fields** (returned on every `EventSummary`, accepted on create/PATCH): `sticker` (≤80), `why_go` (≤400), `solo_note` (≤200), `intents` (any of `Make friends`, `Level up`, `Get moving`, `Make stuff`, `Give back`, `Night out`), `tags` (≤12 short words), `cost_label`, `time_label`.
+
+| Endpoint | Who | What |
+|---|---|---|
+| `PUT /events/:id/rating` `{ "rating": "banger" \| "fine" \| "nope" \| "skipped" }` | 🔑 | Rate a past event (time capsule). Future events return `400`. |
+| `DELETE /events/:id/rating` | 🔑 | Remove my rating. `204`. |
+| `GET /me/ratings` | 🔑 | `{ "data": [ { "event_id": 7, "rating": "banger" } ] }` |
+| `GET /events/:id/report` | 🛠️ | `{ rsvps, going, showed_up, first_timers, banger, fine, nope }` |
+| `POST /uploads` | 🛠️ any club | Raw `image/png`, `image/jpeg` or `image/webp` body (≤8 MB). Returns `{ "url": "/uploads/<id>.png" }`. Use it as `poster_url`. |
+| `GET /posters/*`, `GET /uploads/*` | 🔓 | Static poster images (not under `/api`). Poster paths starting with `/` live on the API origin. |
+
+**Pinning** in the app is `PUT /events/:id/rsvp` with `"going"`. Past events: `GET /events?from=2020-01-01`.
+
+`npm run db:setup -- --reset` now also loads `db/seed_keepup.sql`: the ten Western posters with dates relative to today, 70 sample students for going counts, and sample ratings. It replaces the placeholder events from `seed.sql`.

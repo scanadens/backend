@@ -83,6 +83,32 @@ router.delete('/:id/rsvp', requireAuth, async (req, res) => {
   res.status(204).end();
 });
 
+// ---------- Time capsule ratings ----------
+
+const RATINGS = ['banger', 'fine', 'nope', 'skipped'];
+
+// PUT /events/:id/rating  { rating: "banger" | "fine" | "nope" | "skipped" }
+router.put('/:id/rating', requireAuth, async (req, res) => {
+  const eventId = parseId(req.params.id, 'event id');
+  const rating = req.body?.rating;
+  if (!RATINGS.includes(rating)) throw badRequest(`rating must be one of: ${RATINGS.join(', ')}`);
+  const { rows } = await pool.query('SELECT status, starts_at FROM events WHERE id = $1', [eventId]);
+  if (!rows.length || rows[0].status === 'draft') throw notFound('Event not found');
+  if (new Date(rows[0].starts_at) > new Date()) throw badRequest('You can only rate events that already happened');
+  await pool.query(
+    `INSERT INTO event_ratings (user_id, event_id, rating) VALUES ($1, $2, $3)
+     ON CONFLICT (user_id, event_id) DO UPDATE SET rating = EXCLUDED.rating`,
+    [req.user.id, eventId, rating]);
+  res.json({ event_id: eventId, rating });
+});
+
+// DELETE /events/:id/rating
+router.delete('/:id/rating', requireAuth, async (req, res) => {
+  const eventId = parseId(req.params.id, 'event id');
+  await pool.query('DELETE FROM event_ratings WHERE user_id = $1 AND event_id = $2', [req.user.id, eventId]);
+  res.status(204).end();
+});
+
 // ---------- Exec actions on an existing event ----------
 
 // PATCH /events/:id — send only the fields that change
@@ -131,6 +157,24 @@ router.get('/:id/attendees', requireAuth, requireEventExec, async (req, res) => 
      WHERE r.event_id = $1
      ORDER BY r.status, u.last_name, u.first_name`, [req.event.id]);
   res.json({ data: rows });
+});
+
+// GET /events/:id/report: numbers for the exec desk
+router.get('/:id/report', requireAuth, requireEventExec, async (req, res) => {
+  const { rows: [r] } = await pool.query(
+    `SELECT
+       (SELECT count(*)::int FROM event_rsvps WHERE event_id = $1) AS rsvps,
+       (SELECT count(*)::int FROM event_rsvps WHERE event_id = $1 AND status = 'going') AS going,
+       (SELECT count(*)::int FROM event_rsvps WHERE event_id = $1 AND checked_in_at IS NOT NULL) AS showed_up,
+       (SELECT count(*)::int FROM event_rsvps r WHERE r.event_id = $1 AND r.status = 'going'
+          AND NOT EXISTS (SELECT 1 FROM event_rsvps r2 JOIN events e2 ON e2.id = r2.event_id
+                          WHERE r2.user_id = r.user_id AND r2.event_id <> $1
+                            AND e2.starts_at < (SELECT starts_at FROM events WHERE id = $1))) AS first_timers,
+       (SELECT count(*)::int FROM event_ratings WHERE event_id = $1 AND rating = 'banger') AS banger,
+       (SELECT count(*)::int FROM event_ratings WHERE event_id = $1 AND rating = 'fine') AS fine,
+       (SELECT count(*)::int FROM event_ratings WHERE event_id = $1 AND rating = 'nope') AS nope`,
+    [req.event.id]);
+  res.json(r);
 });
 
 module.exports = router;

@@ -3,6 +3,7 @@
 
 const SUMMARY_COLUMNS = `
   e.id, e.title, e.starts_at, e.ends_at, e.location, e.price, e.poster_url, e.status,
+  e.sticker, e.why_go, e.solo_note, e.intents, e.tags, e.cost_label, e.time_label,
   json_build_object('id', c.id, 'name', c.name, 'slug', c.slug) AS club,
   CASE WHEN cat.id IS NULL THEN NULL
        ELSE json_build_object('id', cat.id, 'name', cat.name) END AS category,

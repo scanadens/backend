@@ -36,6 +36,13 @@ router.get('/events', async (req, res) => {
   res.json({ data: rows });
 });
 
+// GET /me/ratings: my time-capsule ratings
+router.get('/ratings', async (req, res) => {
+  const { rows } = await pool.query(
+    'SELECT event_id, rating FROM event_ratings WHERE user_id = $1', [req.user.id]);
+  res.json({ data: rows });
+});
+
 // GET /me/interests
 router.get('/interests', async (req, res) => {
   const { rows } = await pool.query(

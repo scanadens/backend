@@ -10,10 +10,10 @@ const pool = require('../src/db');
   const reset = process.argv.includes('--reset');
   if (reset) {
     console.log('Dropping existing tables...');
-    await pool.query(`DROP TABLE IF EXISTS poster_extractions, user_interests, event_rsvps, events,
+    await pool.query(`DROP TABLE IF EXISTS poster_extractions, event_ratings, user_interests, event_rsvps, events,
                       categories, club_executives, clubs, users CASCADE`);
   }
-  for (const file of ['schema.sql', 'seed.sql']) {
+  for (const file of ['schema.sql', 'seed.sql', 'seed_keepup.sql']) {
     console.log(`Running db/${file}...`);
     await pool.query(fs.readFileSync(path.join(__dirname, '..', 'db', file), 'utf8'));
   }

@@ -49,13 +49,11 @@ router.get('/:id/events', requireAuth, requireClubExec, async (req, res) => {
 // POST /clubs/:id/events — creates a DRAFT
 router.post('/:id/events', requireAuth, requireClubExec, async (req, res) => {
   const f = validateEventFields(req.body, { partial: false });
+  const columns = ['club_id', 'created_by', ...Object.keys(f)];
+  const values = [req.clubId, req.user.id, ...Object.values(f)];
   const { rows: [created] } = await pool.query(
-    `INSERT INTO events (club_id, created_by, title, description, starts_at, ends_at, location,
-                         price, registration_url, poster_url, category_id, status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE($8, 0), $9, $10, $11, 'draft')
-     RETURNING id`,
-    [req.clubId, req.user.id, f.title, f.description ?? null, f.starts_at, f.ends_at ?? null,
-     f.location ?? null, f.price ?? null, f.registration_url ?? null, f.poster_url ?? null, f.category_id ?? null]);
+    `INSERT INTO events (${columns.join(', ')}, status)
+     VALUES (${columns.map((_, i) => `$${i + 1}`).join(', ')}, 'draft') RETURNING id`, values);
   const { rows } = await pool.query(`${detailSelect} WHERE e.id = $2`, [req.user.id, created.id]);
   res.status(201).json(rows[0]);
 });

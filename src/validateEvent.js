@@ -1,5 +1,7 @@
 const { badRequest } = require('./errors');
 
+const INTENTS = ['Make friends', 'Level up', 'Get moving', 'Make stuff', 'Give back', 'Night out'];
+
 // Checks an event create/update body and returns only the allowed, cleaned fields.
 // partial = true for PATCH (fields are optional); false for create (title + starts_at required).
 function validateEventFields(body, { partial }) {
@@ -44,6 +46,26 @@ function validateEventFields(body, { partial }) {
   text('location', { max: 300 });
   text('registration_url', { max: 2000 });
   text('poster_url', { max: 2000 });
+  text('sticker', { max: 80 });
+  text('why_go', { max: 400 });
+  text('solo_note', { max: 200 });
+  text('cost_label', { max: 120 });
+  text('time_label', { max: 120 });
+
+  if ('intents' in body) {
+    const v = body.intents;
+    if (!Array.isArray(v) || v.some((i) => !INTENTS.includes(i))) {
+      throw badRequest(`intents must be a list from: ${INTENTS.join(', ')}`);
+    }
+    out.intents = [...new Set(v)];
+  }
+  if ('tags' in body) {
+    const v = body.tags;
+    if (!Array.isArray(v) || v.length > 12 || v.some((t) => typeof t !== 'string' || !t.trim() || t.length > 30)) {
+      throw badRequest('tags must be a list of up to 12 short words');
+    }
+    out.tags = [...new Set(v.map((t) => t.trim().toLowerCase()))];
+  }
   date('starts_at', { required: true });
   date('ends_at');
 

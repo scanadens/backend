@@ -71,6 +71,15 @@ CREATE TABLE events (
     price             NUMERIC(8,2)  NOT NULL DEFAULT 0 CHECK (price >= 0), -- 0 = free
     registration_url  TEXT,
     poster_url        TEXT,                             -- file lives in storage, URL here
+    -- Keep Up fields: the pitch shown with each poster
+    sticker           TEXT,                             -- short quote above the poster
+    why_go            TEXT,                             -- "why you should go" pitch
+    solo_note         TEXT,                             -- reassurance for people coming alone
+    intents           TEXT[]        NOT NULL DEFAULT '{}'
+                      CHECK (intents <@ ARRAY['Make friends','Level up','Get moving','Make stuff','Give back','Night out']),
+    tags              TEXT[]        NOT NULL DEFAULT '{}',
+    cost_label        TEXT,                             -- overrides price text, e.g. '$5 members'
+    time_label        TEXT,                             -- overrides the time when the poster has none
     status            TEXT          NOT NULL DEFAULT 'draft'
                       CHECK (status IN ('draft', 'published', 'cancelled')),
     published_at      TIMESTAMPTZ,
@@ -107,6 +116,18 @@ CREATE TABLE user_interests (
     category_id  BIGINT NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
     PRIMARY KEY (user_id, category_id)
 );
+
+-- ---------------------------------------------------------------------
+-- 7b. EVENT_RATINGS — the Keep Up time capsule: how a student rated a past event
+-- ---------------------------------------------------------------------
+CREATE TABLE event_ratings (
+    user_id     BIGINT      NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
+    event_id    BIGINT      NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    rating      TEXT        NOT NULL CHECK (rating IN ('banger', 'fine', 'nope', 'skipped')),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (user_id, event_id)
+);
+CREATE INDEX event_ratings_event_idx ON event_ratings (event_id);
 
 -- ---------------------------------------------------------------------
 -- 8. POSTER_EXTRACTIONS — AI poster uploads awaiting human review
