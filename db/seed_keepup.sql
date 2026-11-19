@@ -39,7 +39,7 @@ SELECT c.id, (SELECT id FROM users WHERE email = 'exec@uwo.ca'), cat.id, e.title
        e.location, e.cost_label, e.time_label, e.poster, 'published', now() - interval '1 day',
        e.sticker, e.why_go, e.solo_note, e.intents::text[], e.tags::text[]
 FROM (VALUES
-  ('tcc','Social','Baklava Night','2026-11-18','19:00',2,'Stevenson Hall, Rm 1155','$5 members · $10 non-members',NULL,'/posters/p4.png',
+  ('tcc','Social','Baklava Night','2026-11-20','19:00',2,'Stevenson Hall, Rm 1155','$5 members · $10 non-members',NULL,'/posters/p4.png',
    'Sticky hands make shy people brave.',
    'You make baklava, you take baklava home. Hands busy, phone away, and everyone around you is also figuring out the next layer. Easy to start talking when you are all covered in pistachio.',
    'Cooking side by side is a built-in conversation starter.',
